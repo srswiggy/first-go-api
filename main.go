@@ -1,28 +1,38 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+	mux2 "github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/", getRoot)
-	http.HandleFunc("/hello", getHello)
+	mux := mux2.NewRouter()
+	mux.HandleFunc("/user", postBody).Methods("POST")
 
-	err := http.ListenAndServe(":8000", nil)
+	err := http.ListenAndServe(":8000", mux)
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
 	}
 }
 
-func getRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got / request\n")
-	io.WriteString(w, "This is my API\n")
+type User struct {
+	Name  string
+	Email string
 }
 
-func getHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("got / hello request\n")
-	io.WriteString(w, "Hello, HTTP!\n")
+func postBody(w http.ResponseWriter, r *http.Request) {
+	var usr User
+	err := json.NewDecoder(r.Body).Decode(&usr)
+	if err != nil {
+		fmt.Print("error decoding body")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(usr)
 }
