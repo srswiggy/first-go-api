@@ -1,3 +1,3 @@
 module github.com/srswiggy/first-api
 
-go 1.18.1
+go 1.18
